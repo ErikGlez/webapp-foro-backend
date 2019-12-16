@@ -1,0 +1,11 @@
+{
+  "name": "api-rest-node",
+  "version": "1.0.0",
+  "description": "API RESTful con NodeJS",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Erik Gonzalez",
+  "license": "MIT"
+}
