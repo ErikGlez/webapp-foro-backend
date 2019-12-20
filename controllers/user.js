@@ -1,38 +1,45 @@
 'use strict'
 var validator = require('validator');
 var bcrypt = require('bcrypt-nodejs');
-var User =  require('../models/user');
+var User = require('../models/user');
 var jwt = require('../services/jwt');
 var controller = {
 
-    probando: function (req, res){
+    probando: function (req, res) {
         return res.status(200).send({
             message: "soy el metodo probando"
         });
     },
 
-    testeando: function(req ,res){
+    testeando: function (req, res) {
         return res.status(200).send({
             message: "soy el metodo testeando"
         });
     },
 
-    save: function(req, res){
+    save: function (req, res) {
         // Recoger los parametros de la peticion
         var params = req.body;
-       
+
         // validar los datos
-        var validate_name= !validator.isEmpty(params.name);
-        var validate_surname= !validator.isEmpty(params.surname);
-        var validate_email= !validator.isEmpty(params.email) && validator.isEmail(params.email);
-        var validate_password= !validator.isEmpty(params.password);
-       
+        try {
+            var validate_name = !validator.isEmpty(params.name);
+            var validate_surname = !validator.isEmpty(params.surname);
+            var validate_email = !validator.isEmpty(params.email) && validator.isEmail(params.email);
+            var validate_password = !validator.isEmpty(params.password);
+        } catch (err) {
+            return res.status(400).send({
+                message: "Datos incompletos",
+                params
+            });
+        }
+
 
         //console.log(validate_name, validate_surname, validate_email, validate_password);
-        if(validate_name && validate_surname && validate_email && validate_password){
+        if (validate_name && validate_surname && validate_email && validate_password) {
 
             // Crear objeto de usuarios
-           var user = new User();
+            var user = new User();
 
             // Asignar valores al usuario
             user.name = params.name;
@@ -42,126 +49,197 @@ var controller = {
             user.image = null;
 
             // Comprobar si el usuario existe
-            User.findOne({email: user.email}, (err, issetUser) => {
-                if(err){
+            User.findOne({ email: user.email }, (err, issetUser) => {
+                if (err) {
                     return res.status(500).send({
-                        message: "Error al comprobar duplicidad de usuario"  
+                        message: "Error al comprobar duplicidad de usuario"
                     });
                 }
 
                 // Si no existe,
-                if(!issetUser){
+                if (!issetUser) {
                     // Cifrar la contraseña
-                    bcrypt.hash(params.password, null, null, (err, hash)=>{
-                        user.password =hash;
+                    bcrypt.hash(params.password, null, null, (err, hash) => {
+                        user.password = hash;
                         // Guardar usuario
-                        user.save((err, userStored)=>{
-                            if(err){
+                        user.save((err, userStored) => {
+                            if (err) {
                                 return res.status(400).send({
-                                    message: "Error al guardar el usuario"  
+                                    message: "Error al guardar el usuario"
                                 });
                             }
 
-                            if(!userStored){
+                            if (!userStored) {
                                 return res.status(500).send({
-                                    message: "No ha sido posible guardar el usuario"  
+                                    message: "No ha sido posible guardar el usuario"
                                 });
                             }
                             // Devoler respuesta
                             return res.status(200).send({
                                 message: "Usuario registrado con exito",
                                 status: 'success',
-                                user: userStored  
+                                user: userStored
                             });
                         }); // close save
-                        
+
                     }); // close bcrypt
-                   
-                }else{
+
+                } else {
                     return res.status(400).send({
                         message: "El usuario ya esta registrado",
-                       
-                });
+
+                    });
                 }
             });
-           
-        }else{
+
+        } else {
             return res.status(400).send({
                 message: "Los datos no son validos",
-                
+
             });
         }
-        
+
     },
-    
-    login: function(req, res){
+
+    login: function (req, res) {
         // Recoger los parametros de la petición
         var params = req.body;
         // Validar los datos
-        var validate_email= !validator.isEmpty(params.email) && validator.isEmail(params.email);
-        var validate_password= !validator.isEmpty(params.password);
+        try {
+            var validate_email = !validator.isEmpty(params.email) && validator.isEmail(params.email);
+            var validate_password = !validator.isEmpty(params.password);
+        } catch (err) {
+            return res.status(400).send({
+                message: "Datos incompletos",
+                params
+            });
+        }
 
-        if(!validate_email  ||  !validate_password){
+        if (!validate_email || !validate_password) {
             return res.status(400).send({
                 message: "Los datos son incorrectos"
             })
         }
         // Buscar usuarios que coincidan con el email
-        User.findOne({email: params.email.toLowerCase()}, (err, user)=>{
-            if(err){
+        User.findOne({ email: params.email.toLowerCase() }, (err, user) => {
+            if (err) {
                 return res.status(500).send({
                     message: "Error al intentar identificarse"
-                    
+
                 })
             }
 
-            if(!user){
+            if (!user) {
                 return res.status(400).send({
                     message: "El usuario no existe"
                 })
             }
             // Si lo encuentra, 
             // comprobar la contraseña (coincidencia de email y password / bcrypt )
-            bcrypt.compare(params.password, user.password, (err, check)=>{
+            bcrypt.compare(params.password, user.password, (err, check) => {
                 // si las credenciales coinciden
-                if(check){
+                if (check) {
                     // Generar token de jwt y devolverlo (mas tarde)
-                    if(params.gettoken){
+                    if (params.gettoken) {
                         //Devolver los datos
                         return res.status(200).send({
                             token: jwt.createToken(user)
                         });
-                    }else{
-                         // Limpiar el objeto antes de devolverlo
+                    } else {
+                        // Limpiar el objeto antes de devolverlo
                         user.password = undefined;
                         // devolver los datos
                         return res.status(200).send({
-                            message: "Usuario identificado", 
+                            message: "Usuario identificado",
                             status: "success",
                             user
                         });
                     }
 
-                   
-                }else{
+
+                } else {
                     return res.status(400).send({
                         message: "La credenciales no coinciden"
                     })
                 }
-               
+
 
             });
         });
-       
-        
+
+
     },
 
-    update: function(req, res){
-        // Paso antes de update -> Crear middleware para comprobar el jwt token, ponerselo a la ruta.
+    update: function (req, res) {
+        // Recoger datos del usuario
+        var params = req.body;
+
+        // Validar datos
+        try {
+            var validate_name = !validator.isEmpty(params.name);
+            var validate_surname = !validator.isEmpty(params.surname);
+            var validate_email = !validator.isEmpty(params.email) && validator.isEmail(params.email);
+        } catch (err) {
+            return res.status(400).send({
+                message: "Datos incompletos",
+                params
+            });
+        }
+        // Eliminar propiedades innecesarias
+        delete params.password;
+        var userId = req.user.sub;
+
+        // Comprobar si el email es unico (evitar duplicidad)
+        if(req.user.email != params.email){
+            User.findOne({ email: params.email.toLowerCase() }, (err, user) => {
+                if (err) {
+                    return res.status(500).send({
+                        message: "Error al intentar modificar el email"
+    
+                    });
+                }
+                // si encuentra un usuario con ese email (no registrar)
+                if (user && user.email == params.email) {
+                    return res.status(400).send({
+                        message: "Este email ya esta registrado"
+                    });
+                }
+                return res.status(400).send({
+                    message: "Potato"
+                });
+                
+            }); 
+        }else{
+            // Buscar y actualizar documento
+            User.findOneAndUpdate({ _id: userId }, params, { new: true }, (err, userUpdated) => {
+                
+                if (err) {
+
+                    return res.status(400).send({
+                        message: 'Error al intentar actualizar  el usuario'
+                    });
+                } 
+
+                if (!userUpdated) {
+
+                    return res.status(500).send({
+                        message: 'No se logro actualizar el usuario'
+                    });
+                }
+
+                // Devolver respuesta
+                return res.status(200).send({
+                    message: 'Usuario actualizado con exito',
+                    status: 'success',
+                    user: userUpdated
+                });
+            });
+        }
+
+         
+            
         
-        return res.status(200).send({
-            message: "soy el metodo de actualizacion"
-        });
+        
     }
 
 };

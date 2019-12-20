@@ -5,7 +5,7 @@ var mongoose = require('mongoose');
 var app = require('./app');
 var port = process.env.PORT || 3700;
 
-
+mongoose.set('useFindAndModify', false);
 mongoose.Promise = global.Promise;
 mongoose.connect(urldb, { useNewUrlParser: true}).then(()=>{
     console.log('La conexión a la base de datos se ha realizado correctamente!!!');
