@@ -154,6 +154,14 @@ var controller = {
         });
        
         
+    },
+
+    update: function(req, res){
+        // Paso antes de update -> Crear middleware para comprobar el jwt token, ponerselo a la ruta.
+        
+        return res.status(200).send({
+            message: "soy el metodo de actualizacion"
+        });
     }
 
 };
