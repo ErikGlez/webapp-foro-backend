@@ -2,7 +2,7 @@
 var validator = require('validator');
 var bcrypt = require('bcrypt-nodejs');
 var User =  require('../models/user');
-
+var jwt = require('../services/jwt');
 var controller = {
 
     probando: function (req, res){
@@ -92,7 +92,70 @@ var controller = {
             });
         }
         
+    },
+    
+    login: function(req, res){
+        // Recoger los parametros de la petición
+        var params = req.body;
+        // Validar los datos
+        var validate_email= !validator.isEmpty(params.email) && validator.isEmail(params.email);
+        var validate_password= !validator.isEmpty(params.password);
+
+        if(!validate_email  ||  !validate_password){
+            return res.status(400).send({
+                message: "Los datos son incorrectos"
+            })
+        }
+        // Buscar usuarios que coincidan con el email
+        User.findOne({email: params.email.toLowerCase()}, (err, user)=>{
+            if(err){
+                return res.status(500).send({
+                    message: "Error al intentar identificarse"
+                    
+                })
+            }
+
+            if(!user){
+                return res.status(400).send({
+                    message: "El usuario no existe"
+                })
+            }
+            // Si lo encuentra, 
+            // comprobar la contraseña (coincidencia de email y password / bcrypt )
+            bcrypt.compare(params.password, user.password, (err, check)=>{
+                // si las credenciales coinciden
+                if(check){
+                    // Generar token de jwt y devolverlo (mas tarde)
+                    if(params.gettoken){
+                        //Devolver los datos
+                        return res.status(200).send({
+                            token: jwt.createToken(user)
+                        });
+                    }else{
+                         // Limpiar el objeto antes de devolverlo
+                        user.password = undefined;
+                        // devolver los datos
+                        return res.status(200).send({
+                            message: "Usuario identificado", 
+                            status: "success",
+                            user
+                        });
+                    }
+
+                   
+                }else{
+                    return res.status(400).send({
+                        message: "La credenciales no coinciden"
+                    })
+                }
+               
+
+            });
+        });
+       
+        
     }
+
 };
 
 module.exports = controller;
