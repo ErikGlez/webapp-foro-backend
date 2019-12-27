@@ -326,12 +326,26 @@ var controller = {
                     user: userUpdated
                 });
             });
-
-            
         }
 
-       
+    },
+
+    avatar:  function(req, res){
+        var fileName = req.params.fileName;
+        var pathFile = './uploads/users/'+fileName;
+
+        fs.exists(pathFile, (exists)=>{
+            if(exists){
+                res.sendFile(path.resolve(pathFile));
+            }else{
+                return res.status(404).send({
+                    status: 'error',
+                    message: 'La imagen no existe'
+                });
+            }
+        });
     }
+
 
 };
 
