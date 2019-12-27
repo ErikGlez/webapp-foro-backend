@@ -1,8 +1,12 @@
 'use strict'
 var validator = require('validator');
 var bcrypt = require('bcrypt-nodejs');
+var fs = require('fs');
+var path = require('path');
 var User = require('../models/user');
 var jwt = require('../services/jwt');
+
+
 var controller = {
 
     probando: function (req, res) {
@@ -204,10 +208,34 @@ var controller = {
                         message: "Este email ya esta registrado"
                     });
                 }
-                return res.status(400).send({
-                    message: "Potato"
-                });
+
+                // No encontro usuario con el mismo email
+                // Buscar y actualizar documento
+                User.findOneAndUpdate({ _id: userId }, params, { new: true }, (err, userUpdated) => {
                 
+                if (err) {
+
+                    return res.status(400).send({
+                        message: 'Error al intentar actualizar  el usuario'
+                    });
+                } 
+
+                if (!userUpdated) {
+
+                    return res.status(500).send({
+                        message: 'No se logro actualizar el usuario'
+                    });
+                }
+
+                // Devolver respuesta
+                return res.status(200).send({
+                    message: 'Usuario actualizado con exito',
+                    status: 'success',
+                    user: userUpdated
+                });
+            });
+                
+                 
             }); 
         }else{
             // Buscar y actualizar documento
@@ -240,6 +268,69 @@ var controller = {
             
         
         
+    },
+
+    uploadAvatar: function(req,res){
+        //Configurar el modulo multiparty(habilitar la subida de ficheros) -> routes/user.js
+
+        // Recoger el fichero de la peticion
+        var file_name ='Avatar no subido';
+
+        // si no existe files
+        if(!req.files){
+        // Devolver respuesta
+            return res.status(404).send({
+                status: 'error',
+                message: file_name
+            });  
+        }       
+        // Conseguir el nombre y la extension del archivo
+        var file_path = req.files.file0.path;
+        var file_split = file_path.split('\\');
+
+        // Si fuera mac o linux 
+        //var file_split = file_path.split('/');
+        
+        //nombre del archivo
+        var file_name = file_split[2];
+        // extension
+        var ext_split = file_name.split('\.');
+        var file_ext = ext_split[1];
+
+        // Comprobar extension solo imagenes, si no es valido borrar el archivo
+
+        if(file_ext != 'png' && file_ext != 'jpg' && file_ext != 'jpeg' && file_ext != 'gif'){
+            fs.unlink(file_path, (err)=>{
+                return res.status(200).send({
+                    status: 'error',
+                    message: 'La extensión del archivo no es valida.',
+                    ext: file_ext
+                });
+            });
+        }else{
+            // Sacar el id del usuario identificado
+            var userId = req.user.sub;
+            // Buscar y actualizar documento de la base de datos
+            User.findOneAndUpdate({_id: userId}, {image: file_name}, {new: true}, (err, userUpdated)=>{
+                if(err || !userUpdated){
+                
+                    return res.status(500).send({
+                        status: 'error',
+                        message: 'Error al guardar el usuario'
+                    });
+                }
+                // Devolver respuesta
+                return res.status(200).send({
+                    status: 'success',
+                    message: 'Usuario actualizado',
+                    user: userUpdated
+                });
+            });
+
+            
+        }
+
+       
     }
 
 };
