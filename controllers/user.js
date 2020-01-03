@@ -207,35 +207,34 @@ var controller = {
                     return res.status(400).send({
                         message: "Este email ya esta registrado"
                     });
+                }else{
+                     // No encontro usuario con el mismo email
+                    // Buscar y actualizar documento
+                    User.findOneAndUpdate({ _id: userId }, params, { new: true }, (err, userUpdated) => {
+                    
+                        if (err) {
+        
+                            return res.status(400).send({
+                                message: 'Error al intentar actualizar  el usuario'
+                            });
+                        } 
+        
+                        if (!userUpdated) {
+        
+                            return res.status(500).send({
+                                message: 'No se logro actualizar el usuario'
+                            });
+                        }
+        
+                        // Devolver respuesta
+                        return res.status(200).send({
+                            message: 'Usuario actualizado con exito',
+                            status: 'success',
+                            user: userUpdated
+                        });
+                    });
                 }
 
-                // No encontro usuario con el mismo email
-                // Buscar y actualizar documento
-                User.findOneAndUpdate({ _id: userId }, params, { new: true }, (err, userUpdated) => {
-                
-                if (err) {
-
-                    return res.status(400).send({
-                        message: 'Error al intentar actualizar  el usuario'
-                    });
-                } 
-
-                if (!userUpdated) {
-
-                    return res.status(500).send({
-                        message: 'No se logro actualizar el usuario'
-                    });
-                }
-
-                // Devolver respuesta
-                return res.status(200).send({
-                    message: 'Usuario actualizado con exito',
-                    status: 'success',
-                    user: userUpdated
-                });
-            });
-                
-                 
             }); 
         }else{
             // Buscar y actualizar documento

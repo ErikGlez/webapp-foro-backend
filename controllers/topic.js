@@ -225,6 +225,40 @@ var controller = {
       }
 
      
+   },
+
+   delete: function(req, res){
+
+    // Sacar el id del topic de la url
+    var topicId = req.params.id;
+    // Find and delete por topicId y por el usuario
+    Topic.findOneAndDelete({_id:topicId
+    , user: req.user.sub}, (err, topicRemoved)=>{
+      if(err){
+        // Devolver respuesta
+       return res.status(500).send({
+        message: 'Error al realizar la petición'
+      });
+      }
+
+      if(!topicRemoved){
+        // Devolver respuesta
+       return res.status(404).send({
+        message: 'No fue posible eliminar el topic'
+      });
+      }
+
+      if(topicRemoved){
+        // Devolver respuesta
+       return res.status(200).send({
+         status: 'success',
+        message: 'Topic eliminado correctamente',
+        topic: topicRemoved
+      });
+      }
+       
+    });
+     
    }
 
     
