@@ -158,7 +158,7 @@ var controller = {
             message: 'No se encontro ningun topic'
           });
         }
-        
+
         // Devolver un resultado. 
         return res.status(200).send({
           status: 'success',
@@ -166,6 +166,65 @@ var controller = {
         });
       });
     
+   },
+
+   update: function(req, res){
+     // Recoger el id del topic de la url
+     var topicId = req.params.id;
+     // Recoger los datos que llegan desde post
+     var params = req.body;
+
+     // Validar datos
+        
+      try{
+
+        var validate_title = !validator.isEmpty(params.title);
+        var validate_content = !validator.isEmpty(params.title);
+        var validate_lang = !validator.isEmpty(params.title);
+
+      }catch(err){
+        return res.status(200).send({
+          message: 'Faltan datos por enviar'
+        });
+      }
+
+      if( validate_title && validate_content && validate_lang){
+        // montar un json con los datos modificables
+          var update ={
+            title: params.title,
+            content: params.content,
+            code: params.code,
+            lang: params.lang
+          };
+        // find and update del topic por id y por id de usuario
+        Topic.findOneAndUpdate({_id: topicId, user: req.user.sub}, update, {new:true}, (err, topicUpdated)=>{
+          
+          if(err){
+            return res.status(500).send({
+              message: 'Error en la petición'
+            });
+          }
+
+          if(!topicUpdated){
+            return res.status(500).send({
+              message: 'No fue posible actualizar el topic'
+            });
+          }
+
+          //Devolver respuesta
+          return res.status(200).send({
+            status: 'success',
+            message: 'Topic actualizado con exito',
+            topic: topicUpdated
+          });
+        });
+      }else{
+        return res.status(200).send({
+          message: 'Los datos no son validos'
+        });
+      }
+
+     
    }
 
     
