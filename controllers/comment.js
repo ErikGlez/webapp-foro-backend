@@ -137,9 +137,58 @@ var controller ={
     },
 
     delete: function(req, res){
-        return res.status(200).send({
-            message: "metodo delete"
+
+        // sacar el id del topic y del comentario a borrar que llega por url
+        var topicId = req.params.topicId;
+        var commentId = req.params.commentId;
+
+        // buscar el topic
+        Topic.findById(topicId, (err, topic)=>{
+            if(err){
+                return res.status(500).send({
+                    status: 'error',
+                    message: 'Error en la petición'
+                });
+            }
+
+            if(!topic){
+                return res.status(500).send({
+                    status: 'error',
+                    message: 'No existe el topic'
+                });
+            }
+            
+            // seleccionar el subdocumento(comentario)
+            var comment = topic.comments.id(commentId);
+
+            // borrar el comentario
+            if(comment){
+                comment.remove();
+                 // guardar el topic
+                topic.save((err)=>{
+                    if(err){
+                        return res.status(500).send({
+                            status: 'error',
+                            message: 'Error en la petición'
+                        });
+                    }
+
+                    // devolver resultado
+                    return res.status(200).send({
+                        status: 'success',
+                        message: "Comentario borrado correctamente",
+                        topic
+                    });
+                });
+                
+            }else{
+                return res.status(500).send({
+                    message: 'No existe el comentario'
+                });
+            }
+           
         });
+       
     }
 };
 
