@@ -56,7 +56,7 @@ var controller ={
                             });
                         }
                         //Devolver respuesta
-                        return res.status(500).send({
+                        return res.status(200).send({
                             status: 'success',
                             topic
                         });
