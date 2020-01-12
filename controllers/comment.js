@@ -191,12 +191,27 @@ var controller ={
                         });
                     }
 
-                    // devolver resultado
-                    return res.status(200).send({
-                        status: 'success',
-                        message: "Comentario borrado correctamente",
-                        topic
-                    });
+                    Topic.findById(topicId).populate('user').populate('comments.user').exec((err, topic)=>{
+                        if(err){
+                          return res.status(500).send({
+                            status: 'error',
+                            message: 'Error al intentar obtener el topic'
+                          });
+                        }
+                
+                        if(!topic){
+                          return res.status(404).send({
+                            status: 'error',
+                            message: 'No se encontro ningun topic'
+                          });
+                        }
+                
+                        // Devolver un resultado. 
+                        return res.status(200).send({
+                          status: 'success',
+                          topic
+                        });
+                      });
                 });
                 
             }else{
