@@ -144,7 +144,7 @@ var controller = {
      // sacar el id del topic de la url
       var topicId = req.params.id;
      // find por id del topic
-      Topic.findById(topicId).populate('user').exec((err, topic)=>{
+      Topic.findById(topicId).populate('user').populate('comments.user').exec((err, topic)=>{
         if(err){
           return res.status(500).send({
             status: 'error',
