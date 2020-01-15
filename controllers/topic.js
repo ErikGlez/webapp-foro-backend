@@ -275,7 +275,7 @@ var controller = {
         {"code": {"$regex": searchString, "$options": "i"}},
         {"lang": {"$regex": searchString, "$options": "i"}},
 
-    ]}).sort([['date', 'descending']]).exec((err, topics)=>{
+    ]}).populate('user').sort([['date', 'descending']]).exec((err, topics)=>{
 
           if(err){
             // Devolver respuesta
